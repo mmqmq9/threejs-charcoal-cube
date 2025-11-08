@@ -189,9 +189,9 @@
     const innerMat = new THREE.MeshBasicMaterial({ color:0xff4500, transparent:true, opacity:0.0, blending:THREE.AdditiveBlending });
     const inner = new THREE.Mesh(innerGeom, innerMat);
     scene.add(inner);
-
+const smokeTexURL = 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/textures/sprites/smoke.png';
     // نظام دخان: مجموعة من sprite planes متحركة
-    const smokeTexURL = 'https://threejs.org/examples/textures/sprites/smoke.png'; // قابل للاستبدال بصورتك
+     // قابل للاستبدال بصورتك
     const smokeTex = txLoader.load(smokeTexURL);
     const smokeGroup = new THREE.Group();
     const smokeCount = 22;
