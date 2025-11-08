@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>يولد كيوب — تجربة 3D سينمائية</title>
+<meta name="description" content="مكعب فحم يولد كيوب — مشهد ثلاثي الأبعاد متفاعل مع لهب ودخان وأداء متدرج." />
+<style>
+  /* CSS أساسي + fallback */
+  html,body { height:100%; margin:0; font-family: Cairo, system-ui, sans-serif; background:#000; color:#fff; -webkit-font-smoothing:antialiased; }
+  #app { width:100vw; height:100vh; position:relative; overflow:hidden; }
+  canvas { display:block; }
+  .ui {
+    position: absolute; top: 24px; right: 24px; z-index: 50; text-align:right;
+    pointer-events:none;
+  }
+  .ui h1 { margin:0; font-size:20px; font-weight:900;
+    background: linear-gradient(90deg,#ff5e00,#ff2200); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .ui p { margin:6px 0 0; color:#ccc; font-size:13px; }
+  .cta {
+    position: absolute; bottom: 28px; left: 28px; z-index:60;
+    pointer-events:auto;
+  }
+  .cta a {
+    display:inline-block; background:#25d366; color:#000; font-weight:800; padding:12px 18px; border-radius:40px;
+    text-decoration:none; box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  }
+
+  /* Fallback CSS 3D cube (when WebGL unavailable or forced) */
+  #fallback {
+    display:none;
+    width:100vw; height:100vh; align-items:center; justify-content:center; background:#000;
+  }
+  .css-scene { width:300px; height:300px; perspective:1000px; }
+  .css-cube { width:100%; height:100%; position:relative; transform-style:preserve-3d; animation: spinFallback 10s linear infinite; }
+  .css-face {
+    position:absolute; width:300px; height:300px; border-radius:6px; background:#111; border:4px solid rgba(255,94,0,0.12);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.6);
+  }
+  .css-face.front{ transform: translateZ(150px); }
+  .css-face.back{ transform: rotateY(180deg) translateZ(150px); }
+  .css-face.right{ transform: rotateY(90deg) translateZ(150px); }
+  .css-face.left{ transform: rotateY(-90deg) translateZ(150px); }
+  .css-face.top{ transform: rotateX(90deg) translateZ(150px); }
+  .css-face.bottom{ transform: rotateX(-90deg) translateZ(150px); }
+
+  @keyframes spinFallback { from{ transform: rotateX(0) rotateY(0) } to{ transform: rotateX(360deg) rotateY(360deg) } }
+
+  /* small-screen tweaks */
+  @media (max-width:600px) {
+    .ui h1 { font-size:18px; }
+    .ui p { font-size:12px; }
+    .css-scene { width:200px; height:200px; }
+    .css-face { width:200px; height:200px; }
+  }
+
+  /* Loader */
+  #loader { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:80; background:linear-gradient(180deg,rgba(0,0,0,0.6),transparent); }
+  #loader .bar { width:120px; height:6px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+  #loader .bar > i { display:block; height:100%; width:30%; background:linear-gradient(90deg,#ff5e00,#ff2200); animation: load 1.2s infinite; }
+  @keyframes load { from{ transform:translateX(-10%) } to{ transform:translateX(250%) } }
+</style>
+</head>
+<body>
+  <div id="app" aria-hidden="false">
+    <div id="three-root"></div>
+    <div id="fallback" role="img" aria-label="مكعب فحم يولد كيوب - بديل">
+      <div class="css-scene"><div class="css-cube">
+        <div class="css-face front"></div>
+        <div class="css-face back"></div>
+        <div class="css-face right"></div>
+        <div class="css-face left"></div>
+        <div class="css-face top"></div>
+        <div class="css-face bottom"></div>
+      </div></div>
+    </div>
+
+    <div class="ui">
+      <h1>فحم يولد كيوب</h1>
+      <p id="hint">اقترب بالماوس أو المس الشاشة لتشغيل الاشتعال</p>
+    </div>
+
+    <div id="loader"><div class="bar"><i></i></div></div>
+
+    <div class="cta">
+      <a id="wa" href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener">💬 اطلب عبر واتساب</a>
+    </div>
+  </div>
+
+  <!-- Three.js + Extras (non-module builds) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+  // تحديد ما إذا كان الجهاز ضعيف الأداء (لتقليل جودة التأثيرات)
+  const lowPower = (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i) || window.innerWidth < 800);
+
+  (function(){
+    // عناصر DOM
+    const root = document.getElementById('three-root');
+    const loaderDiv = document.getElementById('loader');
+    const fallback = document.getElementById('fallback');
+    const hint = document.getElementById('hint');
+
+    // فحص دعم WebGL
+    function webglAvailable() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+      } catch(e) { return false; }
+    }
+
+    if(!webglAvailable()){
+      // show fallback
+      loaderDiv.style.display = 'none';
+      fallback.style.display = 'flex';
+      hint.textContent = 'جهازك لا يدعم WebGL — عرض بديل قيد التشغيل';
+      return;
+    }
+
+    // إعداد المشهد
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, 0.02);
+
+    const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 6);
+
+    const renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true, powerPreference:'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    root.appendChild(renderer.domElement);
+
+    // ضوء أساسي + شعاعي متوهج متغير
+    const ambient = new THREE.AmbientLight(0xffffff, 0.12);
+    scene.add(ambient);
+    const fireLight = new THREE.PointLight(0xff7a33, 1.2, 12, 2);
+    fireLight.position.set(0, 1.2, 1.5);
+    scene.add(fireLight);
+
+    // أرضية بسيطة عاكسة (نصفية)
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(40,40),
+      new THREE.MeshStandardMaterial({ color:0x050505, roughness:1, metalness:0 })
+    );
+    plane.rotation.x = -Math.PI/2;
+    plane.position.y = -1.6;
+    scene.add(plane);
+
+    // مكعب الفحم: خامة مركبة (عادي + منافذ سمّاح)
+    const cubeGeom = new THREE.BoxGeometry(2.2,2.2,2.2, 32,32,32);
+    // ستستخدم texture maps - سنحاكي الفحم عبر خليط procedural (normal + roughness map from data URI simple)
+    // لكن للحصول على واقعية أعلى يمكن استبدال هذه الtextures بروابط خاصة بك.
+    const txLoader = new THREE.TextureLoader();
+
+    // small data URL gray noise for subtle detail (fallback cheap)
+    const noiseDataURL = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><filter id="n"><feTurbulence baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" /></svg>';
+
+    const maps = {
+      roughnessMap: txLoader.load(noiseDataURL),
+      normalMap: txLoader.load(noiseDataURL)
+    };
+    maps.roughnessMap.wrapS = maps.roughnessMap.wrapT = THREE.RepeatWrapping;
+    maps.normalMap.wrapS = maps.normalMap.wrapT = THREE.RepeatWrapping;
+    maps.roughnessMap.repeat.set(4,4);
+    maps.normalMap.repeat.set(4,4);
+
+    const cubeMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0b0b0b,
+      metalness: 0.2,
+      roughness: 0.85,
+      clearcoat: 0.0,
+      transmission: 0.0,
+      emissive: 0x220000,
+      emissiveIntensity: 0.12,
+      roughnessMap: maps.roughnessMap,
+      normalMap: maps.normalMap
+    });
+    const cube = new THREE.Mesh(cubeGeom, cubeMat);
+    cube.position.y = 0.0;
+    scene.add(cube);
+
+    // Layer: inner ember geometry (slightly smaller cube) with emissive gradient shader-like approximation
+    const innerGeom = new THREE.BoxGeometry(1.6,1.6,1.6);
+    const innerMat = new THREE.MeshBasicMaterial({ color:0xff4500, transparent:true, opacity:0.0, blending:THREE.AdditiveBlending });
+    const inner = new THREE.Mesh(innerGeom, innerMat);
+    scene.add(inner);
+
+    // نظام دخان: مجموعة من sprite planes متحركة
+    const smokeTexURL = 'https://threejs.org/examples/textures/sprites/smoke.png'; // قابل للاستبدال بصورتك
+    const smokeTex = txLoader.load(smokeTexURL);
+    const smokeGroup = new THREE.Group();
+    const smokeCount = 22;
+    for(let i=0;i<smokeCount;i++){
+      const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent:true, opacity:0.06 }));
+      m.position.set((Math.random()-0.5)*0.8, -0.2 + Math.random()*1.5, (Math.random()-0.5)*0.8);
+      const s = 0.6 + Math.random()*1.6;
+      m.scale.set(s,s,s);
+      smokeGroup.add(m);
+    }
+    scene.add(smokeGroup);
+
+    // Particles ember (نقاط متوهجة صغيرة داخل المكعب)
+    const emberCount = 140;
+    const emberGeo = new THREE.BufferGeometry();
+    const emberPos = new Float32Array(emberCount*3);
+    const emberCol = new Float32Array(emberCount*3);
+    for(let i=0;i<emberCount;i++){
+      emberPos[i*3+0] = (Math.random()-0.5)*1.2;
+      emberPos[i*3+1] = (Math.random()-0.5)*1.2;
+      emberPos[i*3+2] = (Math.random()-0.5)*1.2;
+      emberCol[i*3+0] = 1.0; emberCol[i*3+1] = 0.4 + Math.random()*0.6; emberCol[i*3+2] = 0.0;
+    }
+    emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos,3));
+    emberGeo.setAttribute('color', new THREE.BufferAttribute(emberCol,3));
+    const emberMat = new THREE.PointsMaterial({ size:0.06, vertexColors:true, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending });
+    const embers = new THREE.Points(emberGeo, emberMat);
+    scene.add(embers);
+
+    // Post-processing: Bloom
+    const composer = new THREE.EffectComposer(renderer);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.9, 0.8, 0.1);
+    bloomPass.threshold = 0.12;
+    bloomPass.strength = 1.2;
+    bloomPass.radius = 0.6;
+    composer.addPass(bloomPass);
+
+    // Controls lightweight
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    controls.autoRotate = false;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI/2.2;
+
+    // Interaction: pointer to control intensity + rotation
+    let isHover = false;
+    let pointer = { x:0, y:0, nx:0, ny:0, down:false };
+    function onPointerMove(e){
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      pointer.x = clientX; pointer.y = clientY;
+      pointer.nx = (clientX / innerWidth) * 2 - 1;
+      pointer.ny = (clientY / innerHeight) * 2 - 1;
+    }
+    window.addEventListener('pointermove', onPointerMove, {passive:true});
+    window.addEventListener('touchmove', onPointerMove, {passive:true});
+
+    // pointer enter/leave on canvas area
+    renderer.domElement.addEventListener('pointerenter', ()=>{ isHover = true; hint.textContent = 'الآن يشتعل — اسحب أو حرك الماوس' });
+    renderer.domElement.addEventListener('pointerleave', ()=>{ isHover = false; hint.textContent = 'اقترب بالماوس أو المس الشاشة' });
+    renderer.domElement.addEventListener('touchstart', ()=>{ isHover = true; }, {passive:true});
+    renderer.domElement.addEventListener('touchend', ()=>{ isHover = false; }, {passive:true});
+
+    // performance guard: lower quality on weak devices
+    if(lowPower){
+      bloomPass.strength = 0.6;
+      bloomPass.radius = 0.4;
+      emberMat.size = 0.04;
+    }
+
+    // Animation loop
+    let clock = new THREE.Clock();
+    function loop(){
+      const t = clock.getElapsedTime();
+      // subtle rotation, affected by pointer
+      const targetRX = (pointer.ny || 0) * 0.4;
+      const targetRY = (pointer.nx || 0) * 0.6;
+      cube.rotation.x += (targetRX - cube.rotation.x) * 0.06;
+      cube.rotation.y += (targetRY - cube.rotation.y) * 0.06;
+      // inner ember pulsation + light flicker when hovered
+      const baseEmissive = 0.12;
+      const hoverBoost = isHover ? 0.8 : 0.0;
+      cube.material.emissiveIntensity = baseEmissive + hoverBoost * (0.5 + Math.abs(Math.sin(t*6))*0.6);
+      inner.material.opacity = Math.min(0.9, hoverBoost * (0.25 + Math.abs(Math.sin(t*8))*0.75));
+      // embers movement
+      const posAttr = emberGeo.attributes.position;
+      for(let i=0;i<emberCount;i++){
+        const idx = i*3+1;
+        posAttr.array[idx] += 0.002 + (Math.sin(t*3 + i) * 0.001);
+        if(posAttr.array[idx] > 1.4) posAttr.array[idx] = -0.6 + Math.random()*0.3;
+      }
+      posAttr.needsUpdate = true;
+      // smoke gentle rise & rotate
+      smokeGroup.children.forEach((s, i)=>{
+        s.position.y += 0.002 + (i%3)*0.0006;
+        s.material.opacity = 0.04 + (isHover ? 0.12 : 0.03) * Math.abs(Math.sin(t*1.2 + i));
+        if(s.position.y > 2.4) s.position.y = -0.8 + Math.random()*0.1;
+        s.rotation += 0.003 * (i%2?1:-1);
+      });
+      // fire light flicker
+      fireLight.intensity = 0.8 + (isHover ? 1.6 : 0.4) * (0.6 + Math.abs(Math.sin(t*10))*0.8);
+      fireLight.color.setHSL(0.06, 1, Math.min(1.0, 0.5 + fireLight.intensity*0.12));
+      // render composer
+      composer.render();
+      controls.update();
+      requestAnimationFrame(loop);
+    }
+
+    // Done loading
+    loaderDiv.style.display = 'none';
+    // show three root
+    loop();
+
+    // resize handling
+    window.addEventListener('resize', ()=>{
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      composer.setSize(innerWidth, innerHeight);
+    });
+
+    // Accessibility: if user cannot run composer heavy, allow a button to switch to fallback
+    // (lightweight toggle for debugging)
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'f'){ // press f to toggle fallback (for testing)
+        const isShowing = fallback.style.display === 'flex';
+        fallback.style.display = isShowing ? 'none' : 'flex';
+        renderer.domElement.style.display = isShowing ? 'block' : 'none';
+        hint.textContent = isShowing ? 'عودة للمشهد' : 'عرض بديل مفعل';
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>
