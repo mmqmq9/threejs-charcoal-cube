@@ -1,110 +1,574 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>يولد كيوب — تجربة 3D سينمائية</title>
-<meta name="description" content="مكعب فحم يولد كيوب — مشهد ثلاثي الأبعاد متفاعل مع لهب ودخان وأداء متدرج." />
-<style>
-  /* CSS أساسي + fallback */
-  html,body { height:100%; margin:0; font-family: Cairo, system-ui, sans-serif; background:#000; color:#fff; -webkit-font-smoothing:antialiased; }
-  #app { width:100vw; height:100vh; position:relative; overflow:hidden; }
-  canvas { display:block; }
-  .ui {
-    position: absolute; top: 24px; right: 24px; z-index: 50; text-align:right;
-    pointer-events:none;
-  }
-  .ui h1 { margin:0; font-size:20px; font-weight:900;
-    background: linear-gradient(90deg,#ff5e00,#ff2200); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  }
-  .ui p { margin:6px 0 0; color:#ccc; font-size:13px; }
-  .cta {
-    position: absolute; bottom: 28px; left: 28px; z-index:60;
-    pointer-events:auto;
-  }
-  .cta a {
-    display:inline-block; background:#25d366; color:#000; font-weight:800; padding:12px 18px; border-radius:40px;
-    text-decoration:none; box-shadow:0 10px 30px rgba(0,0,0,0.45);
-  }
-
-  /* Fallback CSS 3D cube (when WebGL unavailable or forced) */
-  #fallback {
-    display:none;
-    width:100vw; height:100vh; align-items:center; justify-content:center; background:#000;
-  }
-  .css-scene { width:300px; height:300px; perspective:1000px; }
-  .css-cube { width:100%; height:100%; position:relative; transform-style:preserve-3d; animation: spinFallback 10s linear infinite; }
-  .css-face {
-    position:absolute; width:300px; height:300px; border-radius:6px; background:#111; border:4px solid rgba(255,94,0,0.12);
-    box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.6);
-  }
-  .css-face.front{ transform: translateZ(150px); }
-  .css-face.back{ transform: rotateY(180deg) translateZ(150px); }
-  .css-face.right{ transform: rotateY(90deg) translateZ(150px); }
-  .css-face.left{ transform: rotateY(-90deg) translateZ(150px); }
-  .css-face.top{ transform: rotateX(90deg) translateZ(150px); }
-  .css-face.bottom{ transform: rotateX(-90deg) translateZ(150px); }
-
-  @keyframes spinFallback { from{ transform: rotateX(0) rotateY(0) } to{ transform: rotateX(360deg) rotateY(360deg) } }
-
-  /* small-screen tweaks */
-  @media (max-width:600px) {
-    .ui h1 { font-size:18px; }
-    .ui p { font-size:12px; }
-    .css-scene { width:200px; height:200px; }
-    .css-face { width:200px; height:200px; }
-  }
-
-  /* Loader */
-  #loader { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:80; background:linear-gradient(180deg,rgba(0,0,0,0.6),transparent); }
-  #loader .bar { width:120px; height:6px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
-  #loader .bar > i { display:block; height:100%; width:30%; background:linear-gradient(90deg,#ff5e00,#ff2200); animation: load 1.2s infinite; }
-  @keyframes load { from{ transform:translateX(-10%) } to{ transform:translateX(250%) } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>فحم يولد كيوب — تجربة 3D سينمائية</title>
+  <meta name="description" content="فحم طبيعي من قشور جوز الهند، يدوم 90 دقيقة، عديم الرائحة، بتصميم 3D فاخر." />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --orange: #ff5e00;
+      --gold: #ffb74d;
+      --dark: #0a0a0a;
+      --glass: rgba(255, 255, 255, 0.05);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Cairo', sans-serif;
+      background: var(--dark);
+      color: #fff;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+    
+    /* تجربة 3D رئيسية */
+    #three-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    /* واجهة المستخدم */
+    .ui {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 50;
+      text-align: right;
+      pointer-events: none;
+    }
+    .ui h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--orange), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .ui p {
+      margin: 6px 0 0;
+      color: #ccc;
+      font-size: 13px;
+    }
+    
+    /* زر واتساب */
+    .cta {
+      position: absolute;
+      bottom: 28px;
+      left: 28px;
+      z-index: 60;
+      pointer-events: auto;
+    }
+    .cta a {
+      display: inline-block;
+      background: #25d366;
+      color: #000;
+      font-weight: 800;
+      padding: 12px 18px;
+      border-radius: 40px;
+      text-decoration: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      transition: transform 0.3s ease;
+    }
+    .cta a:hover {
+      transform: scale(1.05);
+    }
+    
+    /* المحتوى */
+    .content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2em;
+    }
+    
+    /* طبقات زجاجية */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      padding: 2em;
+      margin: 2em auto;
+      max-width: 800px;
+      width: 90%;
+    }
+    
+    h1, h2 {
+      background: linear-gradient(90deg, var(--orange), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+    
+    header h1 {
+      font-size: 3.5em;
+      margin-bottom: 0.5em;
+    }
+    
+    header p {
+      font-size: 1.3em;
+      color: #ddd;
+    }
+    
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5em;
+      text-align: center;
+    }
+    
+    .features div {
+      background: var(--glass);
+      padding: 1.5em;
+      border-radius: 15px;
+      transition: transform 0.3s ease;
+    }
+    
+    .features div:hover {
+      transform: translateY(-10px);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 2em;
+      color: #aaa;
+    }
+    
+    /* تأثيرات التمرير */
+    .scroll-animate {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 0.8s ease;
+    }
+    
+    .scroll-animate.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Loader */
+    #loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 80;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent);
+    }
+    
+    #loader .bar {
+      width: 120px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    #loader .bar > i {
+      display: block;
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, var(--orange), var(--gold));
+      animation: load 1.2s infinite;
+    }
+    
+    @keyframes load {
+      from { transform: translateX(-10%); }
+      to { transform: translateX(250%); }
+    }
+    
+    /* Fallback CSS 3D cube */
+    #fallback {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+    
+    .css-scene {
+      width: 300px;
+      height: 300px;
+      perspective: 1000px;
+    }
+    
+    .css-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: spinFallback 10s linear infinite;
+    }
+    
+    .css-face {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 6px;
+      background: #111;
+      border: 4px solid rgba(255, 94, 0, 0.12);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9), 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+    
+    .css-face.front { transform: translateZ(150px); }
+    .css-face.back { transform: rotateY(180deg) translateZ(150px); }
+    .css-face.right { transform: rotateY(90deg) translateZ(150px); }
+    .css-face.left { transform: rotateY(-90deg) translateZ(150px); }
+    .css-face.top { transform: rotateX(90deg) translateZ(150px); }
+    .css-face.bottom { transform: rotateX(-90deg) translateZ(150px); }
+    
+    @keyframes spinFallback {
+      from { transform: rotateX(0) rotateY(0); }
+      to { transform: rotateX(360deg) rotateY(360deg); }
+    }
+    
+    /* التكيف مع الشاشات الصغيرة */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.5em;
+      }
+      
+      .ui h1 {
+        font-size: 18px;
+      }
+      
+      .ui p {
+        font-size: 12px;
+      }
+      
+      .css-scene {
+        width: 200px;
+        height: 200px;
+      }
+      
+      .css-face {
+        width: 200px;
+        height: 200px;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* رسالة خطأ */
+    #error-message {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 100;
+    }
+  </style>
 </head>
 <body>
-  <div id="app" aria-hidden="false">
-    <div id="three-root"></div>
-    <div id="fallback" role="img" aria-label="مكعب فحم يولد كيوب - بديل">
-      <div class="css-scene"><div class="css-cube">
+  <!-- تجربة 3D رئيسية -->
+  <div id="three-container"></div>
+  
+  <!-- بديل CSS -->
+  <div id="fallback" role="img" aria-label="مكعب فحم يولد كيوب - بديل">
+    <div class="css-scene">
+      <div class="css-cube">
         <div class="css-face front"></div>
         <div class="css-face back"></div>
         <div class="css-face right"></div>
         <div class="css-face left"></div>
         <div class="css-face top"></div>
         <div class="css-face bottom"></div>
-      </div></div>
-    </div>
-
-    <div class="ui">
-      <h1>فحم يولد كيوب</h1>
-      <p id="hint">اقترب بالماوس أو المس الشاشة لتشغيل الاشتعال</p>
-    </div>
-
-    <div id="loader"><div class="bar"><i></i></div></div>
-
-    <div class="cta">
-      <a id="wa" href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener">💬 اطلب عبر واتساب</a>
+      </div>
     </div>
   </div>
 
-  <!-- Three.js + Extras (non-module builds) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- رسالة خطأ -->
+  <div id="error-message">
+    <h3>حدث خطأ في تحميل التجربة ثلاثية الأبعاد</h3>
+    <p>جاري تحميل النسخة البديلة...</p>
+  </div>
+
+  <!-- واجهة المستخدم -->
+  <div class="ui">
+    <h1>فحم يولد كيوب</h1>
+    <p id="hint">اقترب بالماوس أو المس الشاشة لتشغيل الاشتعال</p>
+  </div>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="bar"><i></i></div>
+  </div>
+
+  <!-- زر واتساب -->
+  <div class="cta">
+    <a id="wa" href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener">💬 اطلب عبر واتساب</a>
+  </div>
+
+  <!-- المحتوى -->
+  <div class="content">
+    <header class="glass scroll-animate">
+      <h1>فحم يولد كيوب</h1>
+      <p>فحم طبيعي من قشور جوز الهند، يدوم 90 دقيقة، عديم الرائحة، بتصميم 3D فاخر.</p>
+    </header>
+
+    <section class="glass scroll-animate">
+      <h2>لماذا تختار يولد كيوب؟</h2>
+      <div class="features">
+        <div>🕒 يدوم حتى 90 دقيقة</div>
+        <div>🌴 من قشور جوز الهند</div>
+        <div>💨 عديم الرائحة والدخان</div>
+        <div>🔲 مكعبات أنيقة وسهلة الاستخدام</div>
+      </div>
+    </section>
+
+    <section class="glass scroll-animate">
+      <h2>آراء العملاء</h2>
+      <p>❝ أفضل فحم جربته! لا يترك رائحة ويشتعل بثبات. ❞ – خالد</p>
+      <p>❝ أنصح فيه بقوة، مثالي للشيشة والجمرات الطويلة. ❞ – أبو عبدالله</p>
+    </section>
+
+    <footer class="scroll-animate">
+      <p>© 2025 فحم يولد كيوب. تصميم 3D فاخر.</p>
+    </footer>
+  </div>
+
+  <!-- Three.js + Extras - إصدارات محددة ومستقرة -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
 
   <script>
-  // تحديد ما إذا كان الجهاز ضعيف الأداء (لتقليل جودة التأثيرات)
-  const lowPower = (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i) || window.innerWidth < 800);
+    // تحديد ما إذا كان الجهاز ضعيف الأداء
+    const lowPower = (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i) || window.innerWidth < 800);
 
-  (function(){
     // عناصر DOM
-    const root = document.getElementById('three-root');
+    const container = document.getElementById('three-container');
     const loaderDiv = document.getElementById('loader');
     const fallback = document.getElementById('fallback');
     const hint = document.getElementById('hint');
+    const errorMessage = document.getElementById('error-message');
+
+    // فحص دعم WebGL
+    function webglAvailable() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && 
+          (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+      } catch(e) { 
+        console.error('WebGL غير مدعوم:', e);
+        return false; 
+      }
+    }
+
+    // وظيفة لتحميل البديل
+    function loadFallback() {
+      loaderDiv.style.display = 'none';
+      fallback.style.display = 'flex';
+      hint.textContent = 'عرض بديل قيد التشغيل';
+      errorMessage.style.display = 'none';
+    }
+
+    // وظيفة لإظهار الخطأ
+    function showError(message) {
+      console.error(message);
+      errorMessage.style.display = 'block';
+      setTimeout(loadFallback, 2000);
+    }
+
+    // التحقق من دعم WebGL أولاً
+    if(!webglAvailable()){
+      showError('جهازك لا يدعم WebGL');
+      loadFallback();
+    } else {
+      // محاولة تحميل Three.js
+      try {
+        initializeThreeJS();
+      } catch (error) {
+        showError('خطأ في تحميل مكتبة الرسوميات: ' + error.message);
+      }
+    }
+
+    function initializeThreeJS() {
+      // إعداد المشهد الأساسي
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0a0a);
+      
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 1.6, 6);
+      
+      const renderer = new THREE.WebGLRenderer({ 
+        antialias: !lowPower,
+        powerPreference: 'high-performance'
+      });
+      
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1 : 2));
+      container.appendChild(renderer.domElement);
+
+      // إضافة أضواء أساسية
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xff7a33, 0.8);
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+
+      // إنشاء مكعب الفحم
+      const geometry = new THREE.BoxGeometry(2, 2, 2);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        metalness: 0.3,
+        roughness: 0.7,
+        emissive: 0x220000,
+        emissiveIntensity: 0.1
+      });
+      
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+
+      // إضافة تأثيرات بسيطة للتوهج
+      const glowGeometry = new THREE.BoxGeometry(2.1, 2.1, 2.1);
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff4500,
+        transparent: true,
+        opacity: 0.1,
+        side: THREE.BackSide
+      });
+      
+      const glowCube = new THREE.Mesh(glowGeometry, glowMaterial);
+      scene.add(glowCube);
+
+      // أرضية
+      const planeGeometry = new THREE.PlaneGeometry(20, 20);
+      const planeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x050505,
+        roughness: 1,
+        metalness: 0
+      });
+      
+      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.y = -1.5;
+      scene.add(plane);
+
+      // إعداد التحكم بالمشهد
+      let controls;
+      try {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.maxPolarAngle = Math.PI / 2;
+      } catch (e) {
+        console.warn('OrbitControls غير متاحة:', e);
+      }
+
+      // تفاعل المستخدم
+      let isHovering = false;
+      let mouseX = 0;
+      let mouseY = 0;
+
+      function handleMouseMove(event) {
+        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+      }
+
+      function handleMouseEnter() {
+        isHovering = true;
+        hint.textContent = 'الآن يشتعل — حرك الماوس للتفاعل';
+      }
+
+      function handleMouseLeave() {
+        isHovering = false;
+        hint.textContent = 'اقترب بالماوس أو المس الشاشة';
+      }
+
+      renderer.domElement.addEventListener('mousemove', handleMouseMove);
+      renderer.domElement.addEventListener('mouseenter', handleMouseEnter);
+      renderer.domElement.addEventListener('mouseleave', handleMouseLeave);
+      
+      // لدعم اللمس
+      renderer.domElement.addEventListener('touchstart', handleMouseEnter);
+      renderer.domElement.addEventListener('touchend', handleMouseLeave);
+
+      // حلقة الرسوم المتحركة
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        // تدوير المكعب بناءً على حركة الماوس
+        cube.rotation.y += 0.01;
+        glowCube.rotation.y = cube.rotation.y;
+        
+        if (isHovering) {
+          // تأثيرات إضافية عند التمرير
+          cube.rotation.x = mouseY * 0.5;
+          cube.rotation.y += mouseX * 0.02;
+          
+          // زيادة التوهج
+          material.emissiveIntensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.1;
+          glowMaterial.opacity = 0.2 + Math.sin(Date.now() * 0.008) * 0.1;
+        } else {
+          // العودة إلى الحالة الطبيعية
+          material.emissiveIntensity = 0.1;
+          glowMaterial.opacity = 0.1;
+        }
+        
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+      }
+
+      // إعادة ضبط الحجم عند تغيير حجم النافذة
+      function handleResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.addEventListener('resize', handleResize);
+
+      // بدء الرسوم المتحركة وإخفاء Loader
+      animate();
+      loaderDiv.style.display = 'none';
+      errorMessage.style.display = 'none';
+      
+      // تفعيل تأثيرات التمرير
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('show');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.scroll-animate').forEach(el => {
+        observer.observe(el);
+      });
+    }
+  </script>
+</body>
+</html>    const hint = document.getElementById('hint');
 
     // فحص دعم WebGL
     function webglAvailable() {
