@@ -3,796 +3,665 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>فحم يولد كيوب — تجربة 3D سينمائية</title>
-  <meta name="description" content="فحم طبيعي من قشور جوز الهند، يدوم 90 دقيقة، عديم الرائحة، بتصميم 3D فاخر." />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <title>فحم يولد كيوب | فحم جوز هند طبيعي مكعب</title>
+  <meta name="description" content="فحم طبيعي من قشور جوز الهند، يدوم 90 دقيقة، عديم الرائحة والدخان، مكعبات أنيقة، صديق للبيئة.">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --orange: #ff5e00;
-      --gold: #ffb74d;
-      --dark: #0a0a0a;
-      --glass: rgba(255, 255, 255, 0.05);
+      --primary: #ff5e00;
+      --primary-dark: #ff2200;
+      --dark: #111;
+      --darker: #0a0a0a;
+      --light: #fff;
+      --gray: #ddd;
+      --dark-gray: #1c1c1c;
     }
+    
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    html, body {
-      height: 100%;
+    
+    body {
       font-family: 'Cairo', sans-serif;
       background: var(--dark);
-      color: #fff;
-      overflow-x: hidden;
+      color: var(--light);
       scroll-behavior: smooth;
+      line-height: 1.6;
+      overflow-x: hidden;
     }
     
-    /* تجربة 3D رئيسية */
-    #three-container {
-      position: fixed;
+    a {
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+    }
+    
+    /* شريط التنقل */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1em 2em;
+      background: rgba(0, 0, 0, 0.9);
+      position: sticky;
       top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 94, 0, 0.2);
     }
     
-    /* واجهة المستخدم */
-    .ui {
-      position: absolute;
-      top: 24px;
-      right: 24px;
-      z-index: 50;
-      text-align: right;
-      pointer-events: none;
-    }
-    .ui h1 {
-      margin: 0;
-      font-size: 20px;
+    .navbar .logo {
+      font-size: 1.5em;
       font-weight: 900;
-      background: linear-gradient(90deg, var(--orange), var(--gold));
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .ui p {
-      margin: 6px 0 0;
-      color: #ccc;
-      font-size: 13px;
+    
+    .nav-links {
+      display: flex;
+      gap: 1.5em;
     }
     
-    /* زر واتساب */
-    .cta {
-      position: absolute;
-      bottom: 28px;
-      left: 28px;
-      z-index: 60;
-      pointer-events: auto;
-    }
-    .cta a {
-      display: inline-block;
-      background: #25d366;
-      color: #000;
-      font-weight: 800;
-      padding: 12px 18px;
-      border-radius: 40px;
-      text-decoration: none;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-      transition: transform 0.3s ease;
-    }
-    .cta a:hover {
-      transform: scale(1.05);
-    }
-    
-    /* المحتوى */
-    .content {
+    .nav-links a {
+      color: var(--gray);
+      font-weight: 600;
       position: relative;
-      z-index: 10;
-      min-height: 100vh;
+      padding: 0.5em 0;
+    }
+    
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    
+    /* الهيدر */
+    header {
+      background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                  url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 2em;
+      padding: 0 1em;
+      position: relative;
     }
     
-    /* طبقات زجاجية */
-    .glass {
-      background: var(--glass);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-      padding: 2em;
-      margin: 2em auto;
+    .header-content {
       max-width: 800px;
-      width: 90%;
+      animation: fadeIn 1s ease;
     }
     
-    h1, h2 {
-      background: linear-gradient(90deg, var(--orange), var(--gold));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 700;
+    header img {
+      border-radius: 50%;
+      margin-bottom: 1.5em;
+      border: 3px solid var(--primary);
+      box-shadow: 0 0 20px rgba(255, 94, 0, 0.5);
+      transition: transform 0.5s ease;
+    }
+    
+    header img:hover {
+      transform: scale(1.05);
     }
     
     header h1 {
       font-size: 3.5em;
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      -webkit-background-clip: text;
+      color: transparent;
       margin-bottom: 0.5em;
+      line-height: 1.2;
     }
     
     header p {
       font-size: 1.3em;
-      color: #ddd;
+      max-width: 600px;
+      color: var(--gray);
+      margin-bottom: 1.5em;
     }
     
+    .cta-button {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 0.8em 2em;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1em;
+      box-shadow: 0 5px 15px rgba(255, 94, 0, 0.4);
+      transition: all 0.3s ease;
+    }
+    
+    .cta-button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(255, 94, 0, 0.6);
+    }
+    
+    /* الأقسام */
+    .section {
+      padding: 5em 1em;
+      max-width: 1200px;
+      margin: auto;
+    }
+    
+    .section h2 {
+      font-size: 2.5em;
+      margin-bottom: 1.5em;
+      text-align: center;
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      -webkit-background-clip: text;
+      color: transparent;
+      position: relative;
+    }
+    
+    .section h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      right: 50%;
+      transform: translateX(50%);
+      width: 80px;
+      height: 3px;
+      background: var(--primary);
+    }
+    
+    /* المميزات */
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5em;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2em;
       text-align: center;
     }
     
-    .features div {
-      background: var(--glass);
-      padding: 1.5em;
+    .feature-card {
+      background: var(--dark-gray);
+      padding: 2em 1.5em;
       border-radius: 15px;
-      transition: transform 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     
-    .features div:hover {
+    .feature-card:hover {
       transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 94, 0, 0.3);
     }
     
-    footer {
+    .feature-card .icon {
+      font-size: 3em;
+      margin-bottom: 0.5em;
+    }
+    
+    .feature-card h3 {
+      margin-bottom: 0.5em;
+      color: var(--primary);
+    }
+    
+    /* حاوية المشهد 3D */
+    #canvas-container {
+      width: 90%;
+      max-width: 600px;
+      aspect-ratio: 1/1;
+      margin: 2em auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(255, 94, 0, 0.3);
+      background: #000;
+      position: relative;
+    }
+    
+    .scene-instructions {
       text-align: center;
+      margin-top: 1em;
+      color: var(--gray);
+    }
+    
+    /* آراء العملاء */
+    .testimonials-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2em;
+    }
+    
+    .testimonial {
+      background: var(--dark-gray);
       padding: 2em;
-      color: #aaa;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      border-right: 5px solid var(--primary);
+      position: relative;
     }
     
-    /* تأثيرات التمرير */
-    .scroll-animate {
+    .testimonial::before {
+      content: """;
+      font-size: 5em;
+      color: rgba(255, 94, 0, 0.2);
+      position: absolute;
+      top: -20px;
+      right: 10px;
+      line-height: 1;
+    }
+    
+    .testimonial p {
+      margin-bottom: 1em;
+      font-style: italic;
+    }
+    
+    .testimonial .author {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    
+    /* نموذج التواصل */
+    .contact-form {
+      background: var(--dark-gray);
+      padding: 3em;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5em;
+    }
+    
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 1em;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--light);
+      border-radius: 8px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+    
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(255, 94, 0, 0.2);
+    }
+    
+    .submit-btn {
+      background: var(--primary);
+      color: var(--light);
+      padding: 1em 2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1em;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 94, 0, 0.4);
+    }
+    
+    /* وسائل التواصل */
+    .social {
+      display: flex;
+      justify-content: center;
+      gap: 1.5em;
+      margin-top: 2em;
+    }
+    
+    .social a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: var(--dark-gray);
+      border-radius: 50%;
+      font-size: 1.5em;
+      transition: all 0.3s ease;
+    }
+    
+    .social a:hover {
+      background: var(--primary);
+      transform: translateY(-5px);
+    }
+    
+    /* الفوتر */
+    footer {
+      background: var(--darker);
+      text-align: center;
+      padding: 3em 1em;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    footer p {
+      color: var(--gray);
+      margin-bottom: 1em;
+    }
+    
+    /* زر الواتساب العائم */
+    .whatsapp-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #25d366;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 50px;
+      font-weight: 700;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .whatsapp-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* تأثيرات الحركة */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
       opacity: 0;
-      transform: translateY(50px);
-      transition: all 0.8s ease;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
     }
     
-    .scroll-animate.show {
+    .fade-in.visible {
       opacity: 1;
       transform: translateY(0);
     }
     
-    /* Loader */
-    #loader {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 80;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent);
-    }
-    
-    #loader .bar {
-      width: 120px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    #loader .bar > i {
-      display: block;
-      height: 100%;
-      width: 30%;
-      background: linear-gradient(90deg, var(--orange), var(--gold));
-      animation: load 1.2s infinite;
-    }
-    
-    @keyframes load {
-      from { transform: translateX(-10%); }
-      to { transform: translateX(250%); }
-    }
-    
-    /* Fallback CSS 3D cube */
-    #fallback {
-      display: none;
-      width: 100vw;
-      height: 100vh;
-      align-items: center;
-      justify-content: center;
-      background: #000;
-    }
-    
-    .css-scene {
-      width: 300px;
-      height: 300px;
-      perspective: 1000px;
-    }
-    
-    .css-cube {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: spinFallback 10s linear infinite;
-    }
-    
-    .css-face {
-      position: absolute;
-      width: 300px;
-      height: 300px;
-      border-radius: 6px;
-      background: #111;
-      border: 4px solid rgba(255, 94, 0, 0.12);
-      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9), 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-    
-    .css-face.front { transform: translateZ(150px); }
-    .css-face.back { transform: rotateY(180deg) translateZ(150px); }
-    .css-face.right { transform: rotateY(90deg) translateZ(150px); }
-    .css-face.left { transform: rotateY(-90deg) translateZ(150px); }
-    .css-face.top { transform: rotateX(90deg) translateZ(150px); }
-    .css-face.bottom { transform: rotateX(-90deg) translateZ(150px); }
-    
-    @keyframes spinFallback {
-      from { transform: rotateX(0) rotateY(0); }
-      to { transform: rotateX(360deg) rotateY(360deg); }
-    }
-    
     /* التكيف مع الشاشات الصغيرة */
     @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        padding: 1em;
+      }
+      
+      .nav-links {
+        margin-top: 1em;
+        gap: 1em;
+      }
+      
       header h1 {
         font-size: 2.5em;
       }
       
-      .ui h1 {
-        font-size: 18px;
+      header p {
+        font-size: 1.1em;
       }
       
-      .ui p {
-        font-size: 12px;
+      .section {
+        padding: 3em 1em;
       }
       
-      .css-scene {
-        width: 200px;
-        height: 200px;
+      .section h2 {
+        font-size: 2em;
       }
       
-      .css-face {
-        width: 200px;
-        height: 200px;
+      .contact-form {
+        padding: 2em;
+      }
+      
+      .whatsapp-btn {
+        bottom: 10px;
+        left: 10px;
+        padding: 12px 16px;
+        font-size: 0.9em;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 2em;
       }
       
       .features {
         grid-template-columns: 1fr;
       }
     }
-    
-    /* رسالة خطأ */
-    #error-message {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 0, 0, 0.1);
-      border: 1px solid rgba(255, 0, 0, 0.3);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      z-index: 100;
-    }
   </style>
 </head>
 <body>
-  <!-- تجربة 3D رئيسية -->
-  <div id="three-container"></div>
-  
-  <!-- بديل CSS -->
-  <div id="fallback" role="img" aria-label="مكعب فحم يولد كيوب - بديل">
-    <div class="css-scene">
-      <div class="css-cube">
-        <div class="css-face front"></div>
-        <div class="css-face back"></div>
-        <div class="css-face right"></div>
-        <div class="css-face left"></div>
-        <div class="css-face top"></div>
-        <div class="css-face bottom"></div>
+
+  <nav class="navbar">
+    <div class="logo">فحم يولد كيوب</div>
+    <div class="nav-links">
+      <a href="#features">المميزات</a>
+      <a href="#scene3d">المكعب التفاعلي</a>
+      <a href="#testimonials">آراء العملاء</a>
+      <a href="#contact">تواصل معنا</a>
+    </div>
+  </nav>
+
+  <header>
+    <div class="header-content">
+      <img src="https://via.placeholder.com/120/ff5e00/ffffff?text=YC" alt="شعار فحم يولد كيوب" width="120" height="120">
+      <h1>فحم يولد كيوب</h1>
+      <p>فحم طبيعي من قشور جوز الهند – يدوم حتى 90 دقيقة، يشتعل بثقة، عديم الرائحة والدخان، صديق للبيئة.</p>
+      <a href="#scene3d" class="cta-button">اكتشف المكعب التفاعلي</a>
+    </div>
+  </header>
+
+  <section class="section" id="features">
+    <h2>لماذا تختار يولد كيوب؟</h2>
+    <div class="features">
+      <div class="feature-card fade-in">
+        <div class="icon">🕒</div>
+        <h3>يدوم طويلاً</h3>
+        <p>يدوم حتى 90 دقيقة من الاحتراق المتواصل</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="icon">🌴</div>
+        <h3>طبيعي 100%</h3>
+        <p>مصنوع من قشور جوز الهند الطبيعي</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="icon">💨</div>
+        <h3>عديم الرائحة</h3>
+        <p>لا يترك رائحة أو دخان مزعج</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="icon">🔲</div>
+        <h3>تصميم أنيق</h3>
+        <p>مكعبات سهلة الاستخدام والتنظيم</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- رسالة خطأ -->
-  <div id="error-message">
-    <h3>حدث خطأ في تحميل التجربة ثلاثية الأبعاد</h3>
-    <p>جاري تحميل النسخة البديلة...</p>
-  </div>
+  <section class="section" id="scene3d">
+    <h2>المكعب التفاعلي ثلاثي الأبعاد</h2>
+    <div id="canvas-container"></div>
+    <p class="scene-instructions">اسحب الماوس حول المكعب وانقر عليه لتشعل النار!</p>
+  </section>
 
-  <!-- واجهة المستخدم -->
-  <div class="ui">
-    <h1>فحم يولد كيوب</h1>
-    <p id="hint">اقترب بالماوس أو المس الشاشة لتشغيل الاشتعال</p>
-  </div>
-
-  <!-- Loader -->
-  <div id="loader">
-    <div class="bar"><i></i></div>
-  </div>
-
-  <!-- زر واتساب -->
-  <div class="cta">
-    <a id="wa" href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener">💬 اطلب عبر واتساب</a>
-  </div>
-
-  <!-- المحتوى -->
-  <div class="content">
-    <header class="glass scroll-animate">
-      <h1>فحم يولد كيوب</h1>
-      <p>فحم طبيعي من قشور جوز الهند، يدوم 90 دقيقة، عديم الرائحة، بتصميم 3D فاخر.</p>
-    </header>
-
-    <section class="glass scroll-animate">
-      <h2>لماذا تختار يولد كيوب؟</h2>
-      <div class="features">
-        <div>🕒 يدوم حتى 90 دقيقة</div>
-        <div>🌴 من قشور جوز الهند</div>
-        <div>💨 عديم الرائحة والدخان</div>
-        <div>🔲 مكعبات أنيقة وسهلة الاستخدام</div>
+  <section class="section" id="testimonials">
+    <h2>آراء عملائنا</h2>
+    <div class="testimonials-container">
+      <div class="testimonial fade-in">
+        <p>"أفضل فحم جربته! لا يترك رائحة ويشتعل بثبات لمدة طويلة."</p>
+        <div class="author">— خالد</div>
       </div>
-    </section>
+      <div class="testimonial fade-in">
+        <p>"أنصح فيه بقوة، مثالي للشيشة والجمرات الطويلة. شكليًا أنيق أيضًا."</p>
+        <div class="author">— أبو عبدالله</div>
+      </div>
+      <div class="testimonial fade-in">
+        <p>"جودة استثنائية وتصميم عملي. لم أعد أستخدم أي نوع آخر من الفحم."</p>
+        <div class="author">— سارة</div>
+      </div>
+    </div>
+  </section>
 
-    <section class="glass scroll-animate">
-      <h2>آراء العملاء</h2>
-      <p>❝ أفضل فحم جربته! لا يترك رائحة ويشتعل بثبات. ❞ – خالد</p>
-      <p>❝ أنصح فيه بقوة، مثالي للشيشة والجمرات الطويلة. ❞ – أبو عبدالله</p>
-    </section>
+  <section class="section" id="contact">
+    <h2>تواصل معنا للطلب</h2>
+    <form class="contact-form fade-in" action="https://formspree.io/f/your-form-id" method="POST">
+      <div class="form-group">
+        <input type="text" name="name" aria-label="الاسم" placeholder="الاسم الكامل" required>
+      </div>
+      <div class="form-group">
+        <input type="tel" name="phone" aria-label="رقم الجوال" placeholder="رقم الجوال" required>
+      </div>
+      <div class="form-group">
+        <textarea name="order" aria-label="ما الذي ترغب بطلبه؟" rows="5" placeholder="ما الذي ترغب بطلبه؟ (الكمية، العنوان، إلخ)" required></textarea>
+      </div>
+      <button type="submit" class="submit-btn">إرسال الطلب</button>
+    </form>
+  </section>
 
-    <footer class="scroll-animate">
-      <p>© 2025 فحم يولد كيوب. تصميم 3D فاخر.</p>
-    </footer>
-  </div>
+  <section class="section">
+    <h2>تابعنا على وسائل التواصل</h2>
+    <div class="social">
+      <a href="https://wa.me/9665xxxxxxxxx" target="_blank" rel="noopener" title="واتساب">💬</a>
+      <a href="https://www.instagram.com/your_user" target="_blank" rel="noopener" title="انستغرام">📷</a>
+      <a href="https://www.tiktok.com/@your_user" target="_blank" rel="noopener" title="تيك توك">🎵</a>
+      <a href="https://www.snapchat.com/add/your_user" target="_blank" rel="noopener" title="سناب">👻</a>
+    </div>
+  </section>
 
-  <!-- Three.js + Extras - إصدارات محددة ومستقرة -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+  <footer>
+    <p>© 2025 فحم يولد كيوب. جميع الحقوق محفوظة.</p>
+    <p>فحم طبيعي صديق للبيئة من قشور جوز الهند</p>
+  </footer>
 
+  <a class="whatsapp-btn" href="https://wa.me/9665xxxxxxxxx" target="_blank" rel="noopener">
+    <span>💬</span> اطلب عبر واتساب
+  </a>
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <script>
-    // تحديد ما إذا كان الجهاز ضعيف الأداء
-    const lowPower = (navigator.userAgent.match(/Android|iPhone|iPad|iPod/i) || window.innerWidth < 800);
-
-    // عناصر DOM
-    const container = document.getElementById('three-container');
-    const loaderDiv = document.getElementById('loader');
-    const fallback = document.getElementById('fallback');
-    const hint = document.getElementById('hint');
-    const errorMessage = document.getElementById('error-message');
-
-    // فحص دعم WebGL
-    function webglAvailable() {
-      try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGLRenderingContext && 
-          (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-      } catch(e) { 
-        console.error('WebGL غير مدعوم:', e);
-        return false; 
-      }
-    }
-
-    // وظيفة لتحميل البديل
-    function loadFallback() {
-      loaderDiv.style.display = 'none';
-      fallback.style.display = 'flex';
-      hint.textContent = 'عرض بديل قيد التشغيل';
-      errorMessage.style.display = 'none';
-    }
-
-    // وظيفة لإظهار الخطأ
-    function showError(message) {
-      console.error(message);
-      errorMessage.style.display = 'block';
-      setTimeout(loadFallback, 2000);
-    }
-
-    // التحقق من دعم WebGL أولاً
-    if(!webglAvailable()){
-      showError('جهازك لا يدعم WebGL');
-      loadFallback();
-    } else {
-      // محاولة تحميل Three.js
-      try {
-        initializeThreeJS();
-      } catch (error) {
-        showError('خطأ في تحميل مكتبة الرسوميات: ' + error.message);
-      }
-    }
-
-    function initializeThreeJS() {
-      // إعداد المشهد الأساسي
+    // تهيئة المشهد ثلاثي الأبعاد
+    const initThreeScene = () => {
+      const container = document.getElementById('canvas-container');
+      if (!container) return;
+      
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0a0a);
+      const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       
-      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-      camera.position.set(0, 1.6, 6);
-      
-      const renderer = new THREE.WebGLRenderer({ 
-        antialias: !lowPower,
-        powerPreference: 'high-performance'
-      });
-      
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowPower ? 1 : 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setClearColor(0x000000, 0);
       container.appendChild(renderer.domElement);
-
-      // إضافة أضواء أساسية
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+      
+      // إضافة الإضاءة
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
       scene.add(ambientLight);
       
-      const directionalLight = new THREE.DirectionalLight(0xff7a33, 0.8);
-      directionalLight.position.set(5, 5, 5);
+      const directionalLight = new THREE.DirectionalLight(0xff5e00, 1);
+      directionalLight.position.set(5, 10, 7);
       scene.add(directionalLight);
-
-      // إنشاء مكعب الفحم
+      
+      // إنشاء المكعب
       const geometry = new THREE.BoxGeometry(2, 2, 2);
       const material = new THREE.MeshStandardMaterial({
         color: 0x111111,
-        metalness: 0.3,
-        roughness: 0.7,
-        emissive: 0x220000,
-        emissiveIntensity: 0.1
+        roughness: 0.8,
+        metalness: 0.2,
+        emissive: new THREE.Color(0x220000),
+        emissiveIntensity: 0.4
       });
       
       const cube = new THREE.Mesh(geometry, material);
       scene.add(cube);
-
-      // إضافة تأثيرات بسيطة للتوهج
-      const glowGeometry = new THREE.BoxGeometry(2.1, 2.1, 2.1);
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff4500,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.BackSide
+      
+      camera.position.z = 5;
+      
+      // التحكم بالدوران
+      let mouseX = 0, mouseY = 0;
+      let targetRotationX = 0, targetRotationY = 0;
+      
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        targetRotationY = mouseX * Math.PI * 0.5;
+        targetRotationX = mouseY * Math.PI * 0.3;
       });
       
-      const glowCube = new THREE.Mesh(glowGeometry, glowMaterial);
-      scene.add(glowCube);
-
-      // أرضية
-      const planeGeometry = new THREE.PlaneGeometry(20, 20);
-      const planeMaterial = new THREE.MeshStandardMaterial({
-        color: 0x050505,
-        roughness: 1,
-        metalness: 0
+      // تأثير النقر
+      container.addEventListener('click', () => {
+        cube.material.emissive = new THREE.Color(0xff5e00);
+        cube.material.emissiveIntensity = 1.2;
+        setTimeout(() => {
+          cube.material.emissive = new THREE.Color(0x220000);
+          cube.material.emissiveIntensity = 0.4;
+        }, 300);
       });
       
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotation.x = -Math.PI / 2;
-      plane.position.y = -1.5;
-      scene.add(plane);
-
-      // إعداد التحكم بالمشهد
-      let controls;
-      try {
-        controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.enableZoom = false;
-        controls.enablePan = false;
-        controls.maxPolarAngle = Math.PI / 2;
-      } catch (e) {
-        console.warn('OrbitControls غير متاحة:', e);
-      }
-
-      // تفاعل المستخدم
-      let isHovering = false;
-      let mouseX = 0;
-      let mouseY = 0;
-
-      function handleMouseMove(event) {
-        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-      }
-
-      function handleMouseEnter() {
-        isHovering = true;
-        hint.textContent = 'الآن يشتعل — حرك الماوس للتفاعل';
-      }
-
-      function handleMouseLeave() {
-        isHovering = false;
-        hint.textContent = 'اقترب بالماوس أو المس الشاشة';
-      }
-
-      renderer.domElement.addEventListener('mousemove', handleMouseMove);
-      renderer.domElement.addEventListener('mouseenter', handleMouseEnter);
-      renderer.domElement.addEventListener('mouseleave', handleMouseLeave);
-      
-      // لدعم اللمس
-      renderer.domElement.addEventListener('touchstart', handleMouseEnter);
-      renderer.domElement.addEventListener('touchend', handleMouseLeave);
-
-      // حلقة الرسوم المتحركة
-      function animate() {
+      // دورة الرسوم المتحركة
+      const animate = () => {
         requestAnimationFrame(animate);
         
-        // تدوير المكعب بناءً على حركة الماوس
-        cube.rotation.y += 0.01;
-        glowCube.rotation.y = cube.rotation.y;
+        cube.rotation.x += (targetRotationX - cube.rotation.x) * 0.05;
+        cube.rotation.y += (targetRotationY - cube.rotation.y) * 0.05;
         
-        if (isHovering) {
-          // تأثيرات إضافية عند التمرير
-          cube.rotation.x = mouseY * 0.5;
-          cube.rotation.y += mouseX * 0.02;
-          
-          // زيادة التوهج
-          material.emissiveIntensity = 0.3 + Math.sin(Date.now() * 0.01) * 0.1;
-          glowMaterial.opacity = 0.2 + Math.sin(Date.now() * 0.008) * 0.1;
-        } else {
-          // العودة إلى الحالة الطبيعية
-          material.emissiveIntensity = 0.1;
-          glowMaterial.opacity = 0.1;
-        }
-        
-        if (controls) controls.update();
         renderer.render(scene, camera);
-      }
-
-      // إعادة ضبط الحجم عند تغيير حجم النافذة
-      function handleResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-
-      window.addEventListener('resize', handleResize);
-
-      // بدء الرسوم المتحركة وإخفاء Loader
-      animate();
-      loaderDiv.style.display = 'none';
-      errorMessage.style.display = 'none';
+      };
       
-      // تفعيل تأثيرات التمرير
-      const observer = new IntersectionObserver((entries) => {
+      animate();
+      
+      // إعادة ضبط الحجم
+      const handleResize = () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      };
+      
+      window.addEventListener('resize', handleResize);
+    };
+    
+    // تأثيرات التمرير
+    const initScrollEffects = () => {
+      const fadeElements = document.querySelectorAll('.fade-in');
+      
+      const fadeObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('show');
+            entry.target.classList.add('visible');
           }
         });
       }, { threshold: 0.1 });
-
-      document.querySelectorAll('.scroll-animate').forEach(el => {
-        observer.observe(el);
-      });
-    }
-  </script>
-</body>
-</html>    const hint = document.getElementById('hint');
-
-    // فحص دعم WebGL
-    function webglAvailable() {
-      try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-      } catch(e) { return false; }
-    }
-
-    if(!webglAvailable()){
-      // show fallback
-      loaderDiv.style.display = 'none';
-      fallback.style.display = 'flex';
-      hint.textContent = 'جهازك لا يدعم WebGL — عرض بديل قيد التشغيل';
-      return;
-    }
-
-    // إعداد المشهد
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x000000, 0.02);
-
-    const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
-    camera.position.set(0, 1.6, 6);
-
-    const renderer = new THREE.WebGLRenderer({ alpha:true, antialias:true, powerPreference:'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    root.appendChild(renderer.domElement);
-
-    // ضوء أساسي + شعاعي متوهج متغير
-    const ambient = new THREE.AmbientLight(0xffffff, 0.12);
-    scene.add(ambient);
-    const fireLight = new THREE.PointLight(0xff7a33, 1.2, 12, 2);
-    fireLight.position.set(0, 1.2, 1.5);
-    scene.add(fireLight);
-
-    // أرضية بسيطة عاكسة (نصفية)
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(40,40),
-      new THREE.MeshStandardMaterial({ color:0x050505, roughness:1, metalness:0 })
-    );
-    plane.rotation.x = -Math.PI/2;
-    plane.position.y = -1.6;
-    scene.add(plane);
-
-    // مكعب الفحم: خامة مركبة (عادي + منافذ سمّاح)
-    const cubeGeom = new THREE.BoxGeometry(2.2,2.2,2.2, 32,32,32);
-    // ستستخدم texture maps - سنحاكي الفحم عبر خليط procedural (normal + roughness map from data URI simple)
-    // لكن للحصول على واقعية أعلى يمكن استبدال هذه الtextures بروابط خاصة بك.
-    const txLoader = new THREE.TextureLoader();
-
-    // small data URL gray noise for subtle detail (fallback cheap)
-    const noiseDataURL = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><filter id="n"><feTurbulence baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" /></svg>';
-
-    const maps = {
-      roughnessMap: txLoader.load(noiseDataURL),
-      normalMap: txLoader.load(noiseDataURL)
+      
+      fadeElements.forEach(el => fadeObserver.observe(el));
     };
-    maps.roughnessMap.wrapS = maps.roughnessMap.wrapT = THREE.RepeatWrapping;
-    maps.normalMap.wrapS = maps.normalMap.wrapT = THREE.RepeatWrapping;
-    maps.roughnessMap.repeat.set(4,4);
-    maps.normalMap.repeat.set(4,4);
-
-    const cubeMat = new THREE.MeshPhysicalMaterial({
-      color: 0x0b0b0b,
-      metalness: 0.2,
-      roughness: 0.85,
-      clearcoat: 0.0,
-      transmission: 0.0,
-      emissive: 0x220000,
-      emissiveIntensity: 0.12,
-      roughnessMap: maps.roughnessMap,
-      normalMap: maps.normalMap
+    
+    // تهيئة كل شيء عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', () => {
+      initThreeScene();
+      initScrollEffects();
     });
-    const cube = new THREE.Mesh(cubeGeom, cubeMat);
-    cube.position.y = 0.0;
-    scene.add(cube);
-
-    // Layer: inner ember geometry (slightly smaller cube) with emissive gradient shader-like approximation
-    const innerGeom = new THREE.BoxGeometry(1.6,1.6,1.6);
-    const innerMat = new THREE.MeshBasicMaterial({ color:0xff4500, transparent:true, opacity:0.0, blending:THREE.AdditiveBlending });
-    const inner = new THREE.Mesh(innerGeom, innerMat);
-    scene.add(inner);
-const smokeTexURL = 'https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/textures/sprites/smoke.png';
-    // نظام دخان: مجموعة من sprite planes متحركة
-     // قابل للاستبدال بصورتك
-    const smokeTex = txLoader.load(smokeTexURL);
-    const smokeGroup = new THREE.Group();
-    const smokeCount = 22;
-    for(let i=0;i<smokeCount;i++){
-      const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent:true, opacity:0.06 }));
-      m.position.set((Math.random()-0.5)*0.8, -0.2 + Math.random()*1.5, (Math.random()-0.5)*0.8);
-      const s = 0.6 + Math.random()*1.6;
-      m.scale.set(s,s,s);
-      smokeGroup.add(m);
-    }
-    scene.add(smokeGroup);
-
-    // Particles ember (نقاط متوهجة صغيرة داخل المكعب)
-    const emberCount = 140;
-    const emberGeo = new THREE.BufferGeometry();
-    const emberPos = new Float32Array(emberCount*3);
-    const emberCol = new Float32Array(emberCount*3);
-    for(let i=0;i<emberCount;i++){
-      emberPos[i*3+0] = (Math.random()-0.5)*1.2;
-      emberPos[i*3+1] = (Math.random()-0.5)*1.2;
-      emberPos[i*3+2] = (Math.random()-0.5)*1.2;
-      emberCol[i*3+0] = 1.0; emberCol[i*3+1] = 0.4 + Math.random()*0.6; emberCol[i*3+2] = 0.0;
-    }
-    emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos,3));
-    emberGeo.setAttribute('color', new THREE.BufferAttribute(emberCol,3));
-    const emberMat = new THREE.PointsMaterial({ size:0.06, vertexColors:true, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending });
-    const embers = new THREE.Points(emberGeo, emberMat);
-    scene.add(embers);
-
-    // Post-processing: Bloom
-    const composer = new THREE.EffectComposer(renderer);
-    const renderPass = new THREE.RenderPass(scene, camera);
-    composer.addPass(renderPass);
-    const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.9, 0.8, 0.1);
-    bloomPass.threshold = 0.12;
-    bloomPass.strength = 1.2;
-    bloomPass.radius = 0.6;
-    composer.addPass(bloomPass);
-
-    // Controls lightweight
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enablePan = false;
-    controls.enableZoom = false;
-    controls.autoRotate = false;
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI/2.2;
-
-    // Interaction: pointer to control intensity + rotation
-    let isHover = false;
-    let pointer = { x:0, y:0, nx:0, ny:0, down:false };
-    function onPointerMove(e){
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      pointer.x = clientX; pointer.y = clientY;
-      pointer.nx = (clientX / innerWidth) * 2 - 1;
-      pointer.ny = (clientY / innerHeight) * 2 - 1;
-    }
-    window.addEventListener('pointermove', onPointerMove, {passive:true});
-    window.addEventListener('touchmove', onPointerMove, {passive:true});
-
-    // pointer enter/leave on canvas area
-    renderer.domElement.addEventListener('pointerenter', ()=>{ isHover = true; hint.textContent = 'الآن يشتعل — اسحب أو حرك الماوس' });
-    renderer.domElement.addEventListener('pointerleave', ()=>{ isHover = false; hint.textContent = 'اقترب بالماوس أو المس الشاشة' });
-    renderer.domElement.addEventListener('touchstart', ()=>{ isHover = true; }, {passive:true});
-    renderer.domElement.addEventListener('touchend', ()=>{ isHover = false; }, {passive:true});
-
-    // performance guard: lower quality on weak devices
-    if(lowPower){
-      bloomPass.strength = 0.6;
-      bloomPass.radius = 0.4;
-      emberMat.size = 0.04;
-    }
-
-    // Animation loop
-    let clock = new THREE.Clock();
-    function loop(){
-      const t = clock.getElapsedTime();
-      // subtle rotation, affected by pointer
-      const targetRX = (pointer.ny || 0) * 0.4;
-      const targetRY = (pointer.nx || 0) * 0.6;
-      cube.rotation.x += (targetRX - cube.rotation.x) * 0.06;
-      cube.rotation.y += (targetRY - cube.rotation.y) * 0.06;
-      // inner ember pulsation + light flicker when hovered
-      const baseEmissive = 0.12;
-      const hoverBoost = isHover ? 0.8 : 0.0;
-      cube.material.emissiveIntensity = baseEmissive + hoverBoost * (0.5 + Math.abs(Math.sin(t*6))*0.6);
-      inner.material.opacity = Math.min(0.9, hoverBoost * (0.25 + Math.abs(Math.sin(t*8))*0.75));
-      // embers movement
-      const posAttr = emberGeo.attributes.position;
-      for(let i=0;i<emberCount;i++){
-        const idx = i*3+1;
-        posAttr.array[idx] += 0.002 + (Math.sin(t*3 + i) * 0.001);
-        if(posAttr.array[idx] > 1.4) posAttr.array[idx] = -0.6 + Math.random()*0.3;
-      }
-      posAttr.needsUpdate = true;
-      // smoke gentle rise & rotate
-      smokeGroup.children.forEach((s, i)=>{
-        s.position.y += 0.002 + (i%3)*0.0006;
-        s.material.opacity = 0.04 + (isHover ? 0.12 : 0.03) * Math.abs(Math.sin(t*1.2 + i));
-        if(s.position.y > 2.4) s.position.y = -0.8 + Math.random()*0.1;
-        s.rotation += 0.003 * (i%2?1:-1);
-      });
-      // fire light flicker
-      fireLight.intensity = 0.8 + (isHover ? 1.6 : 0.4) * (0.6 + Math.abs(Math.sin(t*10))*0.8);
-      fireLight.color.setHSL(0.06, 1, Math.min(1.0, 0.5 + fireLight.intensity*0.12));
-      // render composer
-      composer.render();
-      controls.update();
-      requestAnimationFrame(loop);
-    }
-
-    // Done loading
-    loaderDiv.style.display = 'none';
-    // show three root
-    loop();
-
-    // resize handling
-    window.addEventListener('resize', ()=>{
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
-      composer.setSize(innerWidth, innerHeight);
-    });
-
-    // Accessibility: if user cannot run composer heavy, allow a button to switch to fallback
-    // (lightweight toggle for debugging)
-    window.addEventListener('keydown', (e)=>{
-      if(e.key === 'f'){ // press f to toggle fallback (for testing)
-        const isShowing = fallback.style.display === 'flex';
-        fallback.style.display = isShowing ? 'none' : 'flex';
-        renderer.domElement.style.display = isShowing ? 'block' : 'none';
-        hint.textContent = isShowing ? 'عودة للمشهد' : 'عرض بديل مفعل';
-      }
-    });
-
-  })();
   </script>
 </body>
 </html>
